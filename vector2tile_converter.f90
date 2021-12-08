@@ -13,9 +13,8 @@ program vector2tile_converter
     double precision, allocatable :: snow_ice_layer     (:,:)
     double precision, allocatable :: snow_liq_layer     (:,:)
     double precision, allocatable :: temperature_soil   (:)
-! vegetation_type and sealand_mask needed for JEDI QC. Done from vector-> tile only
-    double precision, allocatable :: vegetation_type   (:)
-    double precision, allocatable :: sealand_mask      (:) 
+! needed by JEDI to mask out land-ice
+    double precision, allocatable :: soil_moisture     (:)
   end type vector_type    
 
   type tile_type
@@ -29,8 +28,7 @@ program vector2tile_converter
     double precision, allocatable :: snow_liq_layer     (:,:,:,:)
     double precision, allocatable :: temperature_soil   (:,:,:)
     real,             allocatable :: land_frac          (:,:,:)
-    double precision, allocatable :: vegetation_type   (:, :, :)
-    double precision, allocatable :: sealand_mask      (:, :, :) 
+    double precision, allocatable :: soil_moisture      (:, :, :)
   end type tile_type    
 
   type namelist_type
@@ -102,8 +100,7 @@ program vector2tile_converter
   allocate(tile%snow_ice_layer     (namelist%tile_size,namelist%tile_size,3,6))
   allocate(tile%snow_liq_layer     (namelist%tile_size,namelist%tile_size,3,6))
   allocate(tile%temperature_soil   (namelist%tile_size,namelist%tile_size,6))
-  allocate(tile%vegetation_type    (namelist%tile_size,namelist%tile_size,6))
-  allocate(tile%sealand_mask       (namelist%tile_size,namelist%tile_size,6))
+  allocate(tile%soil_moisture      (namelist%tile_size,namelist%tile_size,6))
   allocate(tile%land_frac          (namelist%tile_size,namelist%tile_size,6))
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -160,8 +157,7 @@ program vector2tile_converter
   allocate(vector%snow_ice_layer     (vector_length,3))
   allocate(vector%snow_liq_layer     (vector_length,3))
   allocate(vector%temperature_soil   (vector_length))
-  allocate(vector%vegetation_type    (vector_length))
-  allocate(vector%sealand_mask       (vector_length))
+  allocate(vector%soil_moisture      (vector_length))
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Direction of transfer branch
@@ -194,8 +190,7 @@ program vector2tile_converter
         tile%snow_ice_layer(ix,iy,:,itile)      = vector%snow_ice_layer(iloc,:)
         tile%snow_liq_layer(ix,iy,:,itile)      = vector%snow_liq_layer(iloc,:)
         tile%temperature_soil(ix,iy,itile)      = vector%temperature_soil(iloc)
-        tile%vegetation_type(ix,iy,itile)       = vector%vegetation_type(iloc)
-        tile%sealand_mask(ix,iy,itile)          = vector%sealand_mask(iloc)
+        tile%soil_moisture(ix,iy,itile)         = vector%soil_moisture(iloc)
       end if
       
     end do
@@ -343,13 +338,10 @@ contains
       start = (/1            , 1, 1/)                , &
       count = (/vector_length, 1, 1/))
 
-  status = nf90_inq_varid(ncid, "vtype", varid)
-  status = nf90_get_var(ncid, varid , vector%vegetation_type  , &
-      start = (/1,1/), count = (/vector_length, 1/))
-
-  status = nf90_inq_varid(ncid, "slmsk", varid)
-  status = nf90_get_var(ncid, varid , vector%sealand_mask  , &
-      start = (/1,1/), count = (/vector_length, 1/))
+  status = nf90_inq_varid(ncid, "smc", varid)
+  status = nf90_get_var(ncid, varid , vector%soil_moisture , &
+      start = (/1            , 1, 1/)                , &
+      count = (/vector_length, 1, 1/))
 
   status = nf90_close(ncid)
 
@@ -635,11 +627,11 @@ contains
       (/dim_id_ydim,dim_id_xdim,dim_id_time/), varid)
       if (status /= nf90_noerr) call handle_err(status)
 
-    status = nf90_def_var(ncid, "vtype", NF90_DOUBLE,   &
+    status = nf90_def_var(ncid, "smc", NF90_DOUBLE,   &
       (/dim_id_ydim,dim_id_xdim,dim_id_time/), varid)
       if (status /= nf90_noerr) call handle_err(status)
 
-    status = nf90_def_var(ncid, "slmsk", NF90_DOUBLE,   &
+    status = nf90_def_var(ncid, "land_frac", NF90_DOUBLE,   &
       (/dim_id_ydim,dim_id_xdim,dim_id_time/), varid)
       if (status /= nf90_noerr) call handle_err(status)
 
@@ -713,12 +705,13 @@ contains
     status = nf90_put_var(ncid, varid , tile%temperature_soil(:,:,itile)   , &
       start = (/1,1,1/), count = (/namelist%tile_size, namelist%tile_size, 1/))
 
-    status = nf90_inq_varid(ncid, "vtype", varid)
-    status = nf90_put_var(ncid, varid , tile%vegetation_type(:,:,itile)   , &
+    status = nf90_inq_varid(ncid, "smc", varid)
+    status = nf90_put_var(ncid, varid , tile%soil_moisture(:,:,itile)   , &
       start = (/1,1,1/), count = (/namelist%tile_size, namelist%tile_size, 1/))
 
-    status = nf90_inq_varid(ncid, "slmsk", varid)
-    status = nf90_put_var(ncid, varid , tile%sealand_mask(:,:,itile)   , &
+! include in output, so can be used to id which tile grid cells are being simulated
+    status = nf90_inq_varid(ncid, "land_frac", varid)
+    status = nf90_put_var(ncid, varid , tile%land_frac(:,:,itile)   , &
       start = (/1,1,1/), count = (/namelist%tile_size, namelist%tile_size, 1/))
 
   status = nf90_close(ncid)
