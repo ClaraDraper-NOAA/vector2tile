@@ -353,8 +353,9 @@ contains
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
   do itile = 1, 6
-
-    write(tile_filename,'(a17,a19,a5,i1,a3)') "ufs_land_restart.", date, ".tile", itile, ".nc"
+    !write(tile_filename,'(a17,a19,a5,i1,a3)') "ufs_land_restart.", date, ".tile", itile, ".nc"
+    write(tile_filename,'(a4,a2,a2,a1,a2,a18,i1,a3)')  & 
+        date(1:4), date(6:7), date(9:10),".",date(12:13), "0000.sfc_data.tile",itile,".nc"
 
     tile_filename = trim(namelist%tile_restart_path)//trim(tile_filename)
     
@@ -525,7 +526,9 @@ contains
   
   do itile = 1, 6
 
-    write(tile_filename,'(a17,a19,a5,i1,a3)') "ufs_land_restart.", date, ".tile", itile, ".nc"
+    !write(tile_filename,'(a17,a19,a5,i1,a3)') "ufs_land_restart.", date, ".tile", itile, ".nc"
+    write(tile_filename,'(a4,a2,a2,a1,a2,a18,i1,a3)')  & 
+        date(1:4), date(6:7), date(9:10),".",date(12:13), "0000.sfc_data.tile",itile,".nc"
 
     tile_filename = trim(namelist%output_path)//trim(tile_filename)
     
