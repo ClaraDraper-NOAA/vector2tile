@@ -13,6 +13,9 @@ program vector2tile_converter
     double precision, allocatable :: snow_ice_layer     (:,:)
     double precision, allocatable :: snow_liq_layer     (:,:)
     double precision, allocatable :: temperature_soil   (:)
+! vegetation_type and sealand_mask needed for JEDI QC. Done from vector-> tile only
+    double precision, allocatable :: vegetation_type   (:)
+    double precision, allocatable :: sealand_mask      (:) 
   end type vector_type    
 
   type tile_type
@@ -26,6 +29,8 @@ program vector2tile_converter
     double precision, allocatable :: snow_liq_layer     (:,:,:,:)
     double precision, allocatable :: temperature_soil   (:,:,:)
     real,             allocatable :: land_frac          (:,:,:)
+    double precision, allocatable :: vegetation_type   (:, :, :)
+    double precision, allocatable :: sealand_mask      (:, :, :) 
   end type tile_type    
 
   type namelist_type
@@ -97,6 +102,8 @@ program vector2tile_converter
   allocate(tile%snow_ice_layer     (namelist%tile_size,namelist%tile_size,3,6))
   allocate(tile%snow_liq_layer     (namelist%tile_size,namelist%tile_size,3,6))
   allocate(tile%temperature_soil   (namelist%tile_size,namelist%tile_size,6))
+  allocate(tile%vegetation_type    (namelist%tile_size,namelist%tile_size,6))
+  allocate(tile%sealand_mask       (namelist%tile_size,namelist%tile_size,6))
   allocate(tile%land_frac          (namelist%tile_size,namelist%tile_size,6))
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -153,6 +160,8 @@ program vector2tile_converter
   allocate(vector%snow_ice_layer     (vector_length,3))
   allocate(vector%snow_liq_layer     (vector_length,3))
   allocate(vector%temperature_soil   (vector_length))
+  allocate(vector%vegetation_type    (vector_length))
+  allocate(vector%sealand_mask       (vector_length))
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Direction of transfer branch
@@ -174,7 +183,6 @@ program vector2tile_converter
     do itile = 1, 6
     do iy = 1, namelist%tile_size
     do ix = 1, namelist%tile_size
-    
       if(tile%land_frac(ix,iy,itile) > 0.0) then
         iloc = iloc + 1
         tile%swe(ix,iy,itile)                   = vector%swe(iloc)
@@ -186,6 +194,8 @@ program vector2tile_converter
         tile%snow_ice_layer(ix,iy,:,itile)      = vector%snow_ice_layer(iloc,:)
         tile%snow_liq_layer(ix,iy,:,itile)      = vector%snow_liq_layer(iloc,:)
         tile%temperature_soil(ix,iy,itile)      = vector%temperature_soil(iloc)
+        tile%vegetation_type(ix,iy,itile)       = vector%vegetation_type(iloc)
+        tile%sealand_mask(ix,iy,itile)          = vector%sealand_mask(iloc)
       end if
       
     end do
@@ -333,6 +343,14 @@ contains
       start = (/1            , 1, 1/)                , &
       count = (/vector_length, 1, 1/))
 
+  status = nf90_inq_varid(ncid, "vtype", varid)
+  status = nf90_get_var(ncid, varid , vector%vegetation_type  , &
+      start = (/1,1/), count = (/vector_length, 1/))
+
+  status = nf90_inq_varid(ncid, "slmsk", varid)
+  status = nf90_get_var(ncid, varid , vector%sealand_mask  , &
+      start = (/1,1/), count = (/vector_length, 1/))
+
   status = nf90_close(ncid)
 
   end subroutine ReadVectorRestart
@@ -376,7 +394,7 @@ contains
     status = nf90_open(tile_filename, NF90_NOWRITE, ncid)
       if (status /= nf90_noerr) call handle_err(status)
 
-! Start writing restart file
+! Start reading restart file
   
     status = nf90_inq_varid(ncid, "weasd", varid)
     status = nf90_get_var(ncid, varid , tile%swe(:,:,itile)   , &
@@ -521,7 +539,7 @@ contains
   character*19        :: date
   character*256       :: tile_filename
   integer             :: itile
-  integer             :: ncid, varid, status
+  integer             :: ncid, varid, status, i
   integer             :: dim_id_xdim, dim_id_ydim, dim_id_soil, dim_id_snow, dim_id_snso, dim_id_time
   
   do itile = 1, 6
@@ -539,18 +557,45 @@ contains
 
 ! Define dimensions in the file.
 
-    status = nf90_def_dim(ncid, "xdim"          , namelist%tile_size , dim_id_xdim)
+    status = nf90_def_dim(ncid, "xaxis_1"          , namelist%tile_size , dim_id_xdim)
       if (status /= nf90_noerr) call handle_err(status)
-    status = nf90_def_dim(ncid, "ydim"          , namelist%tile_size , dim_id_ydim)
+    status = nf90_def_dim(ncid, "yaxis_1"          , namelist%tile_size , dim_id_ydim)
       if (status /= nf90_noerr) call handle_err(status)
-    status = nf90_def_dim(ncid, "soil_levels"   , 4                  , dim_id_soil)
+    status = nf90_def_dim(ncid, "zaxis_2"   , 4                  , dim_id_soil)
       if (status /= nf90_noerr) call handle_err(status)
-    status = nf90_def_dim(ncid, "snow_levels"   , 3                  , dim_id_snow)
+    status = nf90_def_dim(ncid, "zaxis_3"   , 3                  , dim_id_snow)
       if (status /= nf90_noerr) call handle_err(status)
-    status = nf90_def_dim(ncid, "snso_levels"   , 7                  , dim_id_snso)
+    status = nf90_def_dim(ncid, "zaxis_4"   , 7                  , dim_id_snso)
       if (status /= nf90_noerr) call handle_err(status)
-    status = nf90_def_dim(ncid, "time"          , NF90_UNLIMITED     , dim_id_time)
+    status = nf90_def_dim(ncid, "Time"          , NF90_UNLIMITED     , dim_id_time)
       if (status /= nf90_noerr) call handle_err(status)
+
+! define dimension variables (for JEDI) 
+
+    status = nf90_def_var(ncid, "Time", NF90_DOUBLE,    &
+      (/dim_id_time/), varid)
+    if (status /= nf90_noerr) call handle_err(status)
+
+    status = nf90_def_var(ncid, "xaxis_1", NF90_DOUBLE,    &
+      (/dim_id_xdim/), varid)
+    if (status /= nf90_noerr) call handle_err(status)
+
+    status = nf90_def_var(ncid, "yaxis_1", NF90_DOUBLE,    &
+      (/dim_id_ydim/), varid)
+    if (status /= nf90_noerr) call handle_err(status)
+
+    status = nf90_def_var(ncid, "zaxis_2", NF90_DOUBLE,    &
+      (/dim_id_soil/), varid)
+    if (status /= nf90_noerr) call handle_err(status)
+
+    status = nf90_def_var(ncid, "zaxis_3", NF90_DOUBLE,    &
+      (/dim_id_snow/), varid)
+    if (status /= nf90_noerr) call handle_err(status)
+
+    status = nf90_def_var(ncid, "zaxis_4", NF90_DOUBLE,    &
+      (/dim_id_snso/), varid)
+    if (status /= nf90_noerr) call handle_err(status)
+
   
 ! Define variables in the file.
 
@@ -590,7 +635,41 @@ contains
       (/dim_id_ydim,dim_id_xdim,dim_id_time/), varid)
       if (status /= nf90_noerr) call handle_err(status)
 
+    status = nf90_def_var(ncid, "vtype", NF90_DOUBLE,   &
+      (/dim_id_ydim,dim_id_xdim,dim_id_time/), varid)
+      if (status /= nf90_noerr) call handle_err(status)
+
+    status = nf90_def_var(ncid, "slmsk", NF90_DOUBLE,   &
+      (/dim_id_ydim,dim_id_xdim,dim_id_time/), varid)
+      if (status /= nf90_noerr) call handle_err(status)
+
     status = nf90_enddef(ncid)
+
+! fill dimension variables 
+
+    status = nf90_inq_varid(ncid, "Time", varid)
+    if (status /= nf90_noerr) call handle_err(status)
+    status = nf90_put_var(ncid, varid ,(/1/) )
+
+    status = nf90_inq_varid(ncid, "xaxis_1", varid)
+    if (status /= nf90_noerr) call handle_err(status)
+    status = nf90_put_var(ncid, varid ,(/(i, i=1, namelist%tile_size)/) )
+
+    status = nf90_inq_varid(ncid, "yaxis_1", varid)
+    if (status /= nf90_noerr) call handle_err(status)
+    status = nf90_put_var(ncid, varid ,(/(i, i=1, namelist%tile_size)/) )
+
+    status = nf90_inq_varid(ncid, "zaxis_2", varid)
+    if (status /= nf90_noerr) call handle_err(status)
+    status = nf90_put_var(ncid, varid ,(/(i, i=1, 4)/) )
+
+    status = nf90_inq_varid(ncid, "zaxis_3", varid)
+    if (status /= nf90_noerr) call handle_err(status)
+    status = nf90_put_var(ncid, varid ,(/(i, i=1, 3)/) )
+
+    status = nf90_inq_varid(ncid, "zaxis_4", varid)
+    if (status /= nf90_noerr) call handle_err(status)
+    status = nf90_put_var(ncid, varid ,(/(i, i=1, 7)/) )
 
 ! Start writing restart file
   
@@ -632,6 +711,14 @@ contains
 
     status = nf90_inq_varid(ncid, "stc", varid)
     status = nf90_put_var(ncid, varid , tile%temperature_soil(:,:,itile)   , &
+      start = (/1,1,1/), count = (/namelist%tile_size, namelist%tile_size, 1/))
+
+    status = nf90_inq_varid(ncid, "vtype", varid)
+    status = nf90_put_var(ncid, varid , tile%vegetation_type(:,:,itile)   , &
+      start = (/1,1,1/), count = (/namelist%tile_size, namelist%tile_size, 1/))
+
+    status = nf90_inq_varid(ncid, "slmsk", varid)
+    status = nf90_put_var(ncid, varid , tile%sealand_mask(:,:,itile)   , &
       start = (/1,1,1/), count = (/namelist%tile_size, namelist%tile_size, 1/))
 
   status = nf90_close(ncid)
