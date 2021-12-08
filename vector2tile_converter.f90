@@ -29,6 +29,8 @@ program vector2tile_converter
     double precision, allocatable :: temperature_soil   (:,:,:)
     real,             allocatable :: land_frac          (:,:,:)
     double precision, allocatable :: soil_moisture      (:, :, :)
+! needed by add increments
+    double precision, allocatable :: slmsk              (:, :, :)
   end type tile_type    
 
   type namelist_type
@@ -102,6 +104,7 @@ program vector2tile_converter
   allocate(tile%temperature_soil   (namelist%tile_size,namelist%tile_size,6))
   allocate(tile%soil_moisture      (namelist%tile_size,namelist%tile_size,6))
   allocate(tile%land_frac          (namelist%tile_size,namelist%tile_size,6))
+  allocate(tile%slmsk              (namelist%tile_size,namelist%tile_size,6))
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Read FV3 tile information
@@ -175,6 +178,9 @@ program vector2tile_converter
 ! Transfer vector to tiles
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+    ! explicitly initialize to 0.
+    tile%slmsk=0. 
+
     iloc = 0
     do itile = 1, 6
     do iy = 1, namelist%tile_size
@@ -191,6 +197,7 @@ program vector2tile_converter
         tile%snow_liq_layer(ix,iy,:,itile)      = vector%snow_liq_layer(iloc,:)
         tile%temperature_soil(ix,iy,itile)      = vector%temperature_soil(iloc)
         tile%soil_moisture(ix,iy,itile)         = vector%soil_moisture(iloc)
+        tile%slmsk(ix,iy,itile)         = 1.
       end if
       
     end do
@@ -631,7 +638,7 @@ contains
       (/dim_id_ydim,dim_id_xdim,dim_id_time/), varid)
       if (status /= nf90_noerr) call handle_err(status)
 
-    status = nf90_def_var(ncid, "land_frac", NF90_DOUBLE,   &
+    status = nf90_def_var(ncid, "slmsk", NF90_DOUBLE,   &
       (/dim_id_ydim,dim_id_xdim,dim_id_time/), varid)
       if (status /= nf90_noerr) call handle_err(status)
 
@@ -710,8 +717,8 @@ contains
       start = (/1,1,1/), count = (/namelist%tile_size, namelist%tile_size, 1/))
 
 ! include in output, so can be used to id which tile grid cells are being simulated
-    status = nf90_inq_varid(ncid, "land_frac", varid)
-    status = nf90_put_var(ncid, varid , tile%land_frac(:,:,itile)   , &
+    status = nf90_inq_varid(ncid, "slmsk", varid)
+    status = nf90_put_var(ncid, varid , tile%slmsk(:,:,itile)   , &
       start = (/1,1,1/), count = (/namelist%tile_size, namelist%tile_size, 1/))
 
   status = nf90_close(ncid)
