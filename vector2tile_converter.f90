@@ -12,7 +12,7 @@ program vector2tile_converter
     double precision, allocatable :: temperature_snow   (:,:)
     double precision, allocatable :: snow_ice_layer     (:,:)
     double precision, allocatable :: snow_liq_layer     (:,:)
-    double precision, allocatable :: temperature_soil   (:)
+    double precision, allocatable :: temperature_soil   (:,:)
 ! needed by JEDI to mask out land-ice
     double precision, allocatable :: soil_moisture     (:)
   end type vector_type    
@@ -26,7 +26,7 @@ program vector2tile_converter
     double precision, allocatable :: temperature_snow   (:,:,:,:)
     double precision, allocatable :: snow_ice_layer     (:,:,:,:)
     double precision, allocatable :: snow_liq_layer     (:,:,:,:)
-    double precision, allocatable :: temperature_soil   (:,:,:)
+    double precision, allocatable :: temperature_soil   (:,:,:,:)
     real,             allocatable :: land_frac          (:,:,:)
     double precision, allocatable :: soil_moisture      (:, :, :)
 ! needed by add increments
@@ -101,7 +101,7 @@ program vector2tile_converter
   allocate(tile%temperature_snow   (namelist%tile_size,namelist%tile_size,3,6))
   allocate(tile%snow_ice_layer     (namelist%tile_size,namelist%tile_size,3,6))
   allocate(tile%snow_liq_layer     (namelist%tile_size,namelist%tile_size,3,6))
-  allocate(tile%temperature_soil   (namelist%tile_size,namelist%tile_size,6))
+  allocate(tile%temperature_soil   (namelist%tile_size,namelist%tile_size,4,6))
   allocate(tile%soil_moisture      (namelist%tile_size,namelist%tile_size,6))
   allocate(tile%land_frac          (namelist%tile_size,namelist%tile_size,6))
   allocate(tile%slmsk              (namelist%tile_size,namelist%tile_size,6))
@@ -159,7 +159,7 @@ program vector2tile_converter
   allocate(vector%temperature_snow   (vector_length,3))
   allocate(vector%snow_ice_layer     (vector_length,3))
   allocate(vector%snow_liq_layer     (vector_length,3))
-  allocate(vector%temperature_soil   (vector_length))
+  allocate(vector%temperature_soil   (vector_length,4))
   allocate(vector%soil_moisture      (vector_length))
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -195,7 +195,7 @@ program vector2tile_converter
         tile%temperature_snow(ix,iy,:,itile)    = vector%temperature_snow(iloc,:)
         tile%snow_ice_layer(ix,iy,:,itile)      = vector%snow_ice_layer(iloc,:)
         tile%snow_liq_layer(ix,iy,:,itile)      = vector%snow_liq_layer(iloc,:)
-        tile%temperature_soil(ix,iy,itile)      = vector%temperature_soil(iloc)
+        tile%temperature_soil(ix,iy,:,itile)      = vector%temperature_soil(iloc,:)
         tile%soil_moisture(ix,iy,itile)         = vector%soil_moisture(iloc)
         tile%slmsk(ix,iy,itile)         = 1.
       end if
@@ -243,7 +243,7 @@ program vector2tile_converter
         vector%temperature_snow(iloc,:)    = tile%temperature_snow(ix,iy,:,itile)
         vector%snow_ice_layer(iloc,:)      = tile%snow_ice_layer(ix,iy,:,itile)
         vector%snow_liq_layer(iloc,:)      = tile%snow_liq_layer(ix,iy,:,itile)
-        vector%temperature_soil(iloc)      = tile%temperature_soil(ix,iy,itile)
+        vector%temperature_soil(iloc,:)    = tile%temperature_soil(ix,iy,:,itile)
       end if
       
     end do
@@ -343,7 +343,7 @@ contains
   status = nf90_inq_varid(ncid, "stc", varid)
   status = nf90_get_var(ncid, varid , vector%temperature_soil , &
       start = (/1            , 1, 1/)                , &
-      count = (/vector_length, 1, 1/))
+      count = (/vector_length, 4, 1/))
 
   status = nf90_inq_varid(ncid, "smc", varid)
   status = nf90_get_var(ncid, varid , vector%soil_moisture , &
@@ -395,7 +395,7 @@ contains
 
 ! Start reading restart file
   
-    status = nf90_inq_varid(ncid, "weasd", varid)
+    status = nf90_inq_varid(ncid, "sheleg", varid)
     status = nf90_get_var(ncid, varid , tile%swe(:,:,itile)   , &
       start = (/1,1,1/), count = (/namelist%tile_size, namelist%tile_size, 1/))
 
@@ -432,8 +432,9 @@ contains
       count = (/namelist%tile_size, namelist%tile_size, 3, 1/))
 
     status = nf90_inq_varid(ncid, "stc", varid)
-    status = nf90_get_var(ncid, varid , tile%temperature_soil(:,:,itile)   , &
-      start = (/1,1,1/), count = (/namelist%tile_size, namelist%tile_size, 1/))
+    status = nf90_get_var(ncid, varid , tile%temperature_soil(:,:,:,itile)   , &
+      start = (/1                , 1                , 1, 1/), &
+      count = (/namelist%tile_size, namelist%tile_size, 4, 1/))
 
     status = nf90_close(ncid)
 
@@ -523,7 +524,7 @@ contains
   status = nf90_inq_varid(ncid, "stc", varid)
   status = nf90_put_var(ncid, varid , vector%temperature_soil , &
       start = (/1            , 1, 1/)                , &
-      count = (/vector_length, 1, 1/))
+      count = (/vector_length, 4/))
 
   status = nf90_close(ncid)
 
@@ -598,7 +599,7 @@ contains
   
 ! Define variables in the file.
 
-    status = nf90_def_var(ncid, "weasd", NF90_DOUBLE,    &
+    status = nf90_def_var(ncid, "sheleg", NF90_DOUBLE,    & ! note: this is weasd in vector file.
       (/dim_id_ydim,dim_id_xdim,dim_id_time/), varid)
       if (status /= nf90_noerr) call handle_err(status)
 
@@ -631,7 +632,7 @@ contains
       if (status /= nf90_noerr) call handle_err(status)
 
     status = nf90_def_var(ncid, "stc", NF90_DOUBLE,      &
-      (/dim_id_ydim,dim_id_xdim,dim_id_time/), varid)
+      (/dim_id_ydim,dim_id_xdim,dim_id_soil,dim_id_time/), varid)
       if (status /= nf90_noerr) call handle_err(status)
 
     status = nf90_def_var(ncid, "smc", NF90_DOUBLE,   &
@@ -672,7 +673,7 @@ contains
 
 ! Start writing restart file
   
-    status = nf90_inq_varid(ncid, "weasd", varid)
+    status = nf90_inq_varid(ncid, "sheleg", varid)
     status = nf90_put_var(ncid, varid , tile%swe(:,:,itile)   , &
       start = (/1,1,1/), count = (/namelist%tile_size, namelist%tile_size, 1/))
 
@@ -709,8 +710,8 @@ contains
       count = (/namelist%tile_size, namelist%tile_size, 3, 1/))
 
     status = nf90_inq_varid(ncid, "stc", varid)
-    status = nf90_put_var(ncid, varid , tile%temperature_soil(:,:,itile)   , &
-      start = (/1,1,1/), count = (/namelist%tile_size, namelist%tile_size, 1/))
+    status = nf90_put_var(ncid, varid , tile%temperature_soil(:,:,:,itile)   , &
+      start = (/1,1,1/), count = (/namelist%tile_size, namelist%tile_size, 4, 1/))
 
     status = nf90_inq_varid(ncid, "smc", varid)
     status = nf90_put_var(ncid, varid , tile%soil_moisture(:,:,itile)   , &
