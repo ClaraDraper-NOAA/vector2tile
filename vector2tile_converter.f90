@@ -600,47 +600,47 @@ contains
 ! Define variables in the file.
 
     status = nf90_def_var(ncid, "sheleg", NF90_DOUBLE,    & ! note: this is weasd in vector file.
-      (/dim_id_ydim,dim_id_xdim,dim_id_time/), varid)
+      (/dim_id_xdim,dim_id_ydim,dim_id_time/), varid)
       if (status /= nf90_noerr) call handle_err(status)
 
     status = nf90_def_var(ncid, "snwdph", NF90_DOUBLE,   &
-      (/dim_id_ydim,dim_id_xdim,dim_id_time/), varid)
+      (/dim_id_xdim,dim_id_ydim,dim_id_time/), varid)
       if (status /= nf90_noerr) call handle_err(status)
 
     status = nf90_def_var(ncid, "snowxy", NF90_DOUBLE,   &
-      (/dim_id_ydim,dim_id_xdim,dim_id_time/), varid)
+      (/dim_id_xdim,dim_id_ydim,dim_id_time/), varid)
       if (status /= nf90_noerr) call handle_err(status)
 
     status = nf90_def_var(ncid, "sneqvoxy", NF90_DOUBLE, &
-      (/dim_id_ydim,dim_id_xdim,dim_id_time/), varid)
+      (/dim_id_xdim,dim_id_ydim,dim_id_time/), varid)
       if (status /= nf90_noerr) call handle_err(status)
 
     status = nf90_def_var(ncid, "zsnsoxy", NF90_DOUBLE,  &
-      (/dim_id_ydim,dim_id_xdim,dim_id_snso,dim_id_time/), varid)
+      (/dim_id_xdim,dim_id_ydim,dim_id_snso,dim_id_time/), varid)
       if (status /= nf90_noerr) call handle_err(status)
 
     status = nf90_def_var(ncid, "tsnoxy", NF90_DOUBLE,   &
-      (/dim_id_ydim,dim_id_xdim,dim_id_snow,dim_id_time/), varid)
+      (/dim_id_xdim,dim_id_ydim,dim_id_snow,dim_id_time/), varid)
       if (status /= nf90_noerr) call handle_err(status)
 
     status = nf90_def_var(ncid, "snicexy", NF90_DOUBLE,  &
-      (/dim_id_ydim,dim_id_xdim,dim_id_snow,dim_id_time/), varid)
+      (/dim_id_xdim,dim_id_ydim,dim_id_snow,dim_id_time/), varid)
       if (status /= nf90_noerr) call handle_err(status)
 
     status = nf90_def_var(ncid, "snliqxy", NF90_DOUBLE,  &
-      (/dim_id_ydim,dim_id_xdim,dim_id_snow,dim_id_time/), varid)
+      (/dim_id_xdim,dim_id_ydim,dim_id_snow,dim_id_time/), varid)
       if (status /= nf90_noerr) call handle_err(status)
 
     status = nf90_def_var(ncid, "stc", NF90_DOUBLE,      &
-      (/dim_id_ydim,dim_id_xdim,dim_id_soil,dim_id_time/), varid)
+      (/dim_id_xdim,dim_id_ydim,dim_id_soil,dim_id_time/), varid)
       if (status /= nf90_noerr) call handle_err(status)
 
     status = nf90_def_var(ncid, "smc", NF90_DOUBLE,   &
-      (/dim_id_ydim,dim_id_xdim,dim_id_time/), varid)
+      (/dim_id_xdim,dim_id_ydim,dim_id_time/), varid)
       if (status /= nf90_noerr) call handle_err(status)
 
     status = nf90_def_var(ncid, "slmsk", NF90_DOUBLE,   &
-      (/dim_id_ydim,dim_id_xdim,dim_id_time/), varid)
+      (/dim_id_xdim,dim_id_ydim,dim_id_time/), varid)
       if (status /= nf90_noerr) call handle_err(status)
 
     status = nf90_enddef(ncid)
