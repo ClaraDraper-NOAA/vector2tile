@@ -13,6 +13,8 @@ program vector2tile_converter
     double precision, allocatable :: snow_ice_layer     (:,:)
     double precision, allocatable :: snow_liq_layer     (:,:)
     double precision, allocatable :: temperature_soil   (:,:)
+! needed for IMSaggregate_mod
+    double precision, allocatable :: vegetation_type    (:,:)
 ! needed by JEDI to mask out land-ice
     double precision, allocatable :: soil_moisture     (:)
   end type vector_type    
@@ -29,6 +31,7 @@ program vector2tile_converter
     double precision, allocatable :: temperature_soil   (:,:,:,:)
     real,             allocatable :: land_frac          (:,:,:)
     double precision, allocatable :: soil_moisture      (:, :, :)
+    double precision, allocatable :: vegetation_type    (:,:,:)
 ! needed by add increments
     double precision, allocatable :: slmsk              (:, :, :)
   end type tile_type    
@@ -37,6 +40,7 @@ program vector2tile_converter
     character*256      :: namelist_name = ""
     character*11       :: direction = ""
     character*256      :: tile_path = ""
+    character*256      :: static_path = ""
     integer            :: tile_size
     character*19       :: restart_date = ""
     character*256      :: vector_restart_path = ""
@@ -49,6 +53,7 @@ program vector2tile_converter
   type(namelist_type) :: namelist
   character*256       :: vector_filename
   character*256       :: tile_filename
+  character*256       :: static_filename
   character*19        :: date
   integer             :: vector_length = 0
   integer             :: yyyy,mm,dd,hh,nn,ss
@@ -105,6 +110,7 @@ program vector2tile_converter
   allocate(tile%soil_moisture      (namelist%tile_size,namelist%tile_size,6))
   allocate(tile%land_frac          (namelist%tile_size,namelist%tile_size,6))
   allocate(tile%slmsk              (namelist%tile_size,namelist%tile_size,6))
+  allocate(tile%vegetation_type    (namelist%tile_size,namelist%tile_size,6))
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Read FV3 tile information
@@ -161,6 +167,7 @@ program vector2tile_converter
   allocate(vector%snow_liq_layer     (vector_length,3))
   allocate(vector%temperature_soil   (vector_length,4))
   allocate(vector%soil_moisture      (vector_length))
+  allocate(vector%vegetation_type    (vector_length))
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Direction of transfer branch
@@ -173,7 +180,7 @@ program vector2tile_converter
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
     call ReadVectorRestart(namelist, date, vector, vector_length)
-
+    
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Transfer vector to tiles
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -188,6 +195,7 @@ program vector2tile_converter
       if(tile%land_frac(ix,iy,itile) > 0.0) then
         iloc = iloc + 1
         tile%swe(ix,iy,itile)                   = vector%swe(iloc)
+        tile%vegetation_type(ix,iy,itile)       = vector%vegetation_type(iloc)
         tile%snow_depth(ix,iy,itile)            = vector%snow_depth(iloc)
         tile%active_snow_layers(ix,iy,itile)    = vector%active_snow_layers(iloc)
         tile%swe_previous(ix,iy,itile)          = vector%swe_previous(iloc)
@@ -236,6 +244,7 @@ program vector2tile_converter
       if(tile%land_frac(ix,iy,itile) > 0.0) then
         iloc = iloc + 1
         vector%swe(iloc)                   = tile%swe(ix,iy,itile)
+        vector%vegetation_type(iloc)       = tile%vegetation_type(ix,iy,itile)
         vector%snow_depth(iloc)            = tile%snow_depth(ix,iy,itile)
         vector%active_snow_layers(iloc)    = tile%active_snow_layers(ix,iy,itile)
         vector%swe_previous(iloc)          = tile%swe_previous(ix,iy,itile)
@@ -763,6 +772,7 @@ contains
     character*256       :: vector_restart_path
     character*256       :: tile_restart_path
     character*256       :: output_path
+    character*256       :: static_path
   
     namelist / run_setup  / direction, tile_path, tile_size, restart_date, vector_restart_path, tile_restart_path, output_path
 
