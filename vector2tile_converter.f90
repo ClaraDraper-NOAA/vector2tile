@@ -360,7 +360,23 @@ contains
       count = (/vector_length, 1, 1/))
 
   status = nf90_close(ncid)
+  
+vector_filename = trim(namelist%static_path )//trim(static_filename)
+  
+  inquire(file=vector_filename, exist=file_exists)
+  
+  if(.not.file_exists) then 
+    print*, trim(vector_filename), " does not exist"
+    print*, "Check paths and file name"
+    stop 10 
+  end if
+  
+  status = nf90_open(vector_filename, NF90_NOWRITE, ncid)
 
+  status = nf90_inq_varid(ncid, "vegetation_type", varid)
+  status = nf90_get_var(ncid, varid , vector%vegetation_type   , &
+      start = (/1,1/), count = (/vector_length, 1/))
+      
   end subroutine ReadVectorRestart
 
   subroutine ReadTileRestart(namelist, date, tile)
@@ -651,7 +667,10 @@ contains
     status = nf90_def_var(ncid, "slmsk", NF90_DOUBLE,   &
       (/dim_id_xdim,dim_id_ydim,dim_id_time/), varid)
       if (status /= nf90_noerr) call handle_err(status)
-
+      
+  status = nf90_def_var(ncid, "vegetation_type", NF90_DOUBLE,   &
+      (/dim_id_xdim,dim_id_ydim,dim_id_time/), varid)
+      if (status /= nf90_noerr) call handle_err(status)
     status = nf90_enddef(ncid)
 
 ! fill dimension variables 
@@ -731,6 +750,10 @@ contains
     status = nf90_put_var(ncid, varid , tile%slmsk(:,:,itile)   , &
       start = (/1,1,1/), count = (/namelist%tile_size, namelist%tile_size, 1/))
 
+    status = nf90_inq_varid(ncid, "vegetation_type", varid)
+    status = nf90_put_var(ncid, varid , tile%vegetation_type(:,:,itile)   , &
+      start = (/1,1,1/), count = (/namelist%tile_size, namelist%tile_size, 1/))
+      
   status = nf90_close(ncid)
 
   end do
