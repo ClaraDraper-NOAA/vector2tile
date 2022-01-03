@@ -797,7 +797,7 @@ vector_filename = trim(namelist%static_path )//trim(static_filename)
     character*256       :: output_path
     character*256       :: static_path
   
-    namelist / run_setup  / direction, tile_path, tile_size, restart_date, vector_restart_path, tile_restart_path, output_path
+    namelist / run_setup  / direction, tile_path, tile_size, restart_date, vector_restart_path, tile_restart_path, output_path, static_path
 
     open(30, file=namelist%namelist_name, form="formatted")
      read(30, run_setup)
@@ -810,7 +810,7 @@ vector_filename = trim(namelist%static_path )//trim(static_filename)
     namelist%vector_restart_path = vector_restart_path
     namelist%tile_restart_path   = tile_restart_path
     namelist%output_path         = output_path
-
+    namelist%static_path         = static_path
   end subroutine ReadNamelist
 
   subroutine handle_err(status)
