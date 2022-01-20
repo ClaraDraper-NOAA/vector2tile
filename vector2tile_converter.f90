@@ -13,6 +13,8 @@ program vector2tile_converter
     double precision, allocatable :: snow_ice_layer     (:,:)
     double precision, allocatable :: snow_liq_layer     (:,:)
     double precision, allocatable :: temperature_soil   (:,:)
+! needed for IMSaggregate_mod
+    double precision, allocatable :: vegetation_category(:)
 ! needed by JEDI to mask out land-ice
     double precision, allocatable :: soil_moisture     (:)
   end type vector_type    
@@ -29,6 +31,7 @@ program vector2tile_converter
     double precision, allocatable :: temperature_soil   (:,:,:,:)
     real,             allocatable :: land_frac          (:,:,:)
     double precision, allocatable :: soil_moisture      (:, :, :)
+    double precision, allocatable :: vegetation_category(:,:,:)
 ! needed by add increments
     double precision, allocatable :: slmsk              (:, :, :)
   end type tile_type    
@@ -37,6 +40,7 @@ program vector2tile_converter
     character*256      :: namelist_name = ""
     character*11       :: direction = ""
     character*256      :: tile_path = ""
+    character*256      :: static_path = ""
     integer            :: tile_size
     character*19       :: restart_date = ""
     character*256      :: vector_restart_path = ""
@@ -49,6 +53,7 @@ program vector2tile_converter
   type(namelist_type) :: namelist
   character*256       :: vector_filename
   character*256       :: tile_filename
+  character*256       :: static_filename
   character*19        :: date
   integer             :: vector_length = 0
   integer             :: yyyy,mm,dd,hh,nn,ss
@@ -105,6 +110,7 @@ program vector2tile_converter
   allocate(tile%soil_moisture      (namelist%tile_size,namelist%tile_size,6))
   allocate(tile%land_frac          (namelist%tile_size,namelist%tile_size,6))
   allocate(tile%slmsk              (namelist%tile_size,namelist%tile_size,6))
+  allocate(tile%vegetation_category(namelist%tile_size,namelist%tile_size,6))
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Read FV3 tile information
@@ -161,6 +167,7 @@ program vector2tile_converter
   allocate(vector%snow_liq_layer     (vector_length,3))
   allocate(vector%temperature_soil   (vector_length,4))
   allocate(vector%soil_moisture      (vector_length))
+  allocate(vector%vegetation_category(vector_length))
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Direction of transfer branch
@@ -173,7 +180,7 @@ program vector2tile_converter
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
     call ReadVectorRestart(namelist, date, vector, vector_length)
-
+    
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Transfer vector to tiles
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -188,6 +195,7 @@ program vector2tile_converter
       if(tile%land_frac(ix,iy,itile) > 0.0) then
         iloc = iloc + 1
         tile%swe(ix,iy,itile)                   = vector%swe(iloc)
+        tile%vegetation_category(ix,iy,itile)   = vector%vegetation_category(iloc)
         tile%snow_depth(ix,iy,itile)            = vector%snow_depth(iloc)
         tile%active_snow_layers(ix,iy,itile)    = vector%active_snow_layers(iloc)
         tile%swe_previous(ix,iy,itile)          = vector%swe_previous(iloc)
@@ -236,6 +244,7 @@ program vector2tile_converter
       if(tile%land_frac(ix,iy,itile) > 0.0) then
         iloc = iloc + 1
         vector%swe(iloc)                   = tile%swe(ix,iy,itile)
+        vector%vegetation_category(iloc)   = tile%vegetation_category(ix,iy,itile)
         vector%snow_depth(iloc)            = tile%snow_depth(ix,iy,itile)
         vector%active_snow_layers(iloc)    = tile%active_snow_layers(ix,iy,itile)
         vector%swe_previous(iloc)          = tile%swe_previous(ix,iy,itile)
@@ -351,7 +360,23 @@ contains
       count = (/vector_length, 1, 1/))
 
   status = nf90_close(ncid)
+  
+vector_filename = trim(namelist%static_path )//trim(static_filename)
+  
+  inquire(file=vector_filename, exist=file_exists)
+  
+  if(.not.file_exists) then 
+    print*, trim(vector_filename), " does not exist"
+    print*, "Check paths and file name"
+    stop 10 
+  end if
+  
+  status = nf90_open(vector_filename, NF90_NOWRITE, ncid)
 
+  status = nf90_inq_varid(ncid, "vtype", varid)
+  status = nf90_get_var(ncid, varid , vector%vegetation_category     , &
+      start = (/1,1/), count = (/vector_length, 1/))
+      
   end subroutine ReadVectorRestart
 
   subroutine ReadTileRestart(namelist, date, tile)
@@ -642,7 +667,10 @@ contains
     status = nf90_def_var(ncid, "slmsk", NF90_DOUBLE,   &
       (/dim_id_xdim,dim_id_ydim,dim_id_time/), varid)
       if (status /= nf90_noerr) call handle_err(status)
-
+      
+  status = nf90_def_var(ncid, "vtype", NF90_DOUBLE,   &
+      (/dim_id_xdim,dim_id_ydim,dim_id_time/), varid)
+      if (status /= nf90_noerr) call handle_err(status)
     status = nf90_enddef(ncid)
 
 ! fill dimension variables 
@@ -722,6 +750,10 @@ contains
     status = nf90_put_var(ncid, varid , tile%slmsk(:,:,itile)   , &
       start = (/1,1,1/), count = (/namelist%tile_size, namelist%tile_size, 1/))
 
+    status = nf90_inq_varid(ncid, "vtype", varid)
+    status = nf90_put_var(ncid, varid , tile%vegetation_category(:,:,itile)   , &
+      start = (/1,1,1/), count = (/namelist%tile_size, namelist%tile_size, 1/))
+      
   status = nf90_close(ncid)
 
   end do
@@ -763,8 +795,9 @@ contains
     character*256       :: vector_restart_path
     character*256       :: tile_restart_path
     character*256       :: output_path
+    character*256       :: static_path
   
-    namelist / run_setup  / direction, tile_path, tile_size, restart_date, vector_restart_path, tile_restart_path, output_path
+    namelist / run_setup  / direction, tile_path, tile_size, restart_date, vector_restart_path, tile_restart_path, output_path, static_path
 
     open(30, file=namelist%namelist_name, form="formatted")
      read(30, run_setup)
@@ -777,7 +810,7 @@ contains
     namelist%vector_restart_path = vector_restart_path
     namelist%tile_restart_path   = tile_restart_path
     namelist%output_path         = output_path
-
+    namelist%static_path         = static_path
   end subroutine ReadNamelist
 
   subroutine handle_err(status)
