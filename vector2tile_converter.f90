@@ -424,39 +424,39 @@ contains
     status = nf90_get_var(ncid, varid , tile%swe(:,:,itile)   , &
       start = (/1,1,1/), count = (/namelist%tile_size, namelist%tile_size, 1/))
 
-    status = nf90_inq_varid(ncid, "snwdph", varid)
+    status = nf90_inq_varid(ncid, "snow_depth", varid)
     status = nf90_get_var(ncid, varid , tile%snow_depth(:,:,itile)   , &
       start = (/1,1,1/), count = (/namelist%tile_size, namelist%tile_size, 1/))
 
-    status = nf90_inq_varid(ncid, "snowxy", varid)
+    status = nf90_inq_varid(ncid, "snow_levels", varid)
     status = nf90_get_var(ncid, varid , tile%active_snow_layers(:,:,itile)   , &
       start = (/1,1,1/), count = (/namelist%tile_size, namelist%tile_size, 1/))
 
-    status = nf90_inq_varid(ncid, "sneqvoxy", varid)
+    status = nf90_inq_varid(ncid, "snow_water_equiv_old", varid)
     status = nf90_get_var(ncid, varid , tile%swe_previous(:,:,itile)   , &
       start = (/1,1,1/), count = (/namelist%tile_size, namelist%tile_size, 1/))
 
-    status = nf90_inq_varid(ncid, "zsnsoxy", varid)
+    status = nf90_inq_varid(ncid, "interface_depth", varid)
     status = nf90_get_var(ncid, varid , tile%snow_soil_interface(:,:,:,itile) , &
       start = (/1                , 1                , 1, 1/), &
       count = (/namelist%tile_size, namelist%tile_size, 7, 1/))
 
-    status = nf90_inq_varid(ncid, "tsnoxy", varid)
+    status = nf90_inq_varid(ncid, "temperature_snow", varid)
     status = nf90_get_var(ncid, varid , tile%temperature_snow(:,:,:,itile)  , &
       start = (/1                , 1                , 1, 1/), &
       count = (/namelist%tile_size, namelist%tile_size, 3, 1/))
 
-    status = nf90_inq_varid(ncid, "snicexy", varid)
+    status = nf90_inq_varid(ncid, "snow_level_ice", varid)
     status = nf90_get_var(ncid, varid , tile%snow_ice_layer(:,:,:,itile) , &
       start = (/1                , 1                , 1, 1/), &
       count = (/namelist%tile_size, namelist%tile_size, 3, 1/))
 
-    status = nf90_inq_varid(ncid, "snliqxy", varid)
+    status = nf90_inq_varid(ncid, "snow_level_liquid", varid)
     status = nf90_get_var(ncid, varid , tile%snow_liq_layer(:,:,:,itile) , &
       start = (/1                , 1                , 1, 1/), &
       count = (/namelist%tile_size, namelist%tile_size, 3, 1/))
 
-    status = nf90_inq_varid(ncid, "stc", varid)
+    status = nf90_inq_varid(ncid, "temperature_soil", varid)
     status = nf90_get_var(ncid, varid , tile%temperature_soil(:,:,:,itile)   , &
       start = (/1                , 1                , 1, 1/), &
       count = (/namelist%tile_size, namelist%tile_size, 4, 1/))
@@ -705,39 +705,39 @@ contains
     status = nf90_put_var(ncid, varid , tile%swe(:,:,itile)   , &
       start = (/1,1,1/), count = (/namelist%tile_size, namelist%tile_size, 1/))
 
-    status = nf90_inq_varid(ncid, "snwdph", varid)
+    status = nf90_inq_varid(ncid, "snow_depth", varid)
     status = nf90_put_var(ncid, varid , tile%snow_depth(:,:,itile)   , &
       start = (/1,1,1/), count = (/namelist%tile_size, namelist%tile_size, 1/))
 
-    status = nf90_inq_varid(ncid, "snowxy", varid)
+    status = nf90_inq_varid(ncid, "snow_levels", varid)
     status = nf90_put_var(ncid, varid , tile%active_snow_layers(:,:,itile)   , &
       start = (/1,1,1/), count = (/namelist%tile_size, namelist%tile_size, 1/))
 
-    status = nf90_inq_varid(ncid, "sneqvoxy", varid)
+    status = nf90_inq_varid(ncid, "snow_water_equiv_old", varid)
     status = nf90_put_var(ncid, varid , tile%swe_previous(:,:,itile)   , &
       start = (/1,1,1/), count = (/namelist%tile_size, namelist%tile_size, 1/))
 
-    status = nf90_inq_varid(ncid, "zsnsoxy", varid)
+    status = nf90_inq_varid(ncid, "interface_depth", varid)
     status = nf90_put_var(ncid, varid , tile%snow_soil_interface(:,:,:,itile) , &
       start = (/1                , 1                , 1, 1/), &
       count = (/namelist%tile_size, namelist%tile_size, 7, 1/))
 
-    status = nf90_inq_varid(ncid, "tsnoxy", varid)
+    status = nf90_inq_varid(ncid, "temperature_snow", varid)
     status = nf90_put_var(ncid, varid , tile%temperature_snow(:,:,:,itile)  , &
       start = (/1                , 1                , 1, 1/), &
       count = (/namelist%tile_size, namelist%tile_size, 3, 1/))
 
-    status = nf90_inq_varid(ncid, "snicexy", varid)
+    status = nf90_inq_varid(ncid, "snow_level_ice", varid)
     status = nf90_put_var(ncid, varid , tile%snow_ice_layer(:,:,:,itile) , &
       start = (/1                , 1                , 1, 1/), &
       count = (/namelist%tile_size, namelist%tile_size, 3, 1/))
 
-    status = nf90_inq_varid(ncid, "snliqxy", varid)
+    status = nf90_inq_varid(ncid, "snow_level_liquid", varid)
     status = nf90_put_var(ncid, varid , tile%snow_liq_layer(:,:,:,itile) , &
       start = (/1                , 1                , 1, 1/), &
       count = (/namelist%tile_size, namelist%tile_size, 3, 1/))
 
-    status = nf90_inq_varid(ncid, "stc", varid)
+    status = nf90_inq_varid(ncid, "temperature_soil", varid)
     status = nf90_put_var(ncid, varid , tile%temperature_soil(:,:,:,itile)   , &
       start = (/1,1,1/), count = (/namelist%tile_size, namelist%tile_size, 4, 1/))
 
