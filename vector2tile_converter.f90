@@ -16,7 +16,7 @@ program vector2tile_converter
 ! needed for IMSaggregate_mod
     double precision, allocatable :: vegetation_type(:)
 ! needed by JEDI to mask out land-ice
-    double precision, allocatable :: soil_moisture     (:)
+    double precision, allocatable :: soil_moisture     (:,:)
   end type vector_type    
 
   type tile_type
@@ -30,7 +30,7 @@ program vector2tile_converter
     double precision, allocatable :: snow_liq_layer     (:,:,:,:)
     double precision, allocatable :: temperature_soil   (:,:,:,:)
     real,             allocatable :: land_frac          (:,:,:)
-    double precision, allocatable :: soil_moisture      (:, :, :)
+    double precision, allocatable :: soil_moisture      (:,:,:,:)
     double precision, allocatable :: vegetation_type(:,:,:)
 ! needed by add increments
     double precision, allocatable :: slmsk              (:, :, :)
@@ -106,7 +106,7 @@ program vector2tile_converter
   allocate(tile%snow_ice_layer     (namelist%tile_size,namelist%tile_size,3,6))
   allocate(tile%snow_liq_layer     (namelist%tile_size,namelist%tile_size,3,6))
   allocate(tile%temperature_soil   (namelist%tile_size,namelist%tile_size,4,6))
-  allocate(tile%soil_moisture      (namelist%tile_size,namelist%tile_size,6))
+  allocate(tile%soil_moisture      (namelist%tile_size,namelist%tile_size,4,6))
   allocate(tile%land_frac          (namelist%tile_size,namelist%tile_size,6))
   allocate(tile%slmsk              (namelist%tile_size,namelist%tile_size,6))
   allocate(tile%vegetation_type(namelist%tile_size,namelist%tile_size,6))
@@ -165,7 +165,7 @@ program vector2tile_converter
   allocate(vector%snow_ice_layer     (vector_length,3))
   allocate(vector%snow_liq_layer     (vector_length,3))
   allocate(vector%temperature_soil   (vector_length,4))
-  allocate(vector%soil_moisture      (vector_length))
+  allocate(vector%soil_moisture      (vector_length,4))
   allocate(vector%vegetation_type    (vector_length))
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -203,7 +203,7 @@ program vector2tile_converter
         tile%snow_ice_layer(ix,iy,:,itile)      = vector%snow_ice_layer(iloc,:)
         tile%snow_liq_layer(ix,iy,:,itile)      = vector%snow_liq_layer(iloc,:)
         tile%temperature_soil(ix,iy,:,itile)    = vector%temperature_soil(iloc,:)
-        tile%soil_moisture(ix,iy,itile)         = vector%soil_moisture(iloc)
+        tile%soil_moisture(ix,iy,:,itile)         = vector%soil_moisture(iloc,:)
         tile%slmsk(ix,iy,itile)         = 1.
       end if
       
@@ -355,7 +355,7 @@ contains
   status = nf90_inq_varid(ncid, "smc", varid)
   status = nf90_get_var(ncid, varid , vector%soil_moisture , &
       start = (/1            , 1, 1/)                , &
-      count = (/vector_length, 1, 1/))
+      count = (/vector_length, 4, 1/))
 
   status = nf90_close(ncid)
 
@@ -661,7 +661,7 @@ contains
       if (status /= nf90_noerr) call handle_err(status)
 
     status = nf90_def_var(ncid, "smc", NF90_DOUBLE,   &
-      (/dim_id_xdim,dim_id_ydim,dim_id_time/), varid)
+      (/dim_id_xdim,dim_id_ydim,dim_id_soil,dim_id_time/), varid)
       if (status /= nf90_noerr) call handle_err(status)
 
     status = nf90_def_var(ncid, "slmsk", NF90_DOUBLE,   &
@@ -742,8 +742,8 @@ contains
       start = (/1,1,1/), count = (/namelist%tile_size, namelist%tile_size, 4, 1/))
 
     status = nf90_inq_varid(ncid, "smc", varid)
-    status = nf90_put_var(ncid, varid , tile%soil_moisture(:,:,itile)   , &
-      start = (/1,1,1/), count = (/namelist%tile_size, namelist%tile_size, 1/))
+    status = nf90_put_var(ncid, varid , tile%soil_moisture(:,:,:,itile)   , &
+      start = (/1,1,1/), count = (/namelist%tile_size, namelist%tile_size, 4, 1/))
 
 ! include in output, so can be used to id which tile grid cells are being simulated
     status = nf90_inq_varid(ncid, "slmsk", varid)
