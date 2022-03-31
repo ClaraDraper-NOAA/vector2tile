@@ -263,6 +263,9 @@ program vector2tile_converter
         vector%snow_ice_layer(iloc,:)      = tile%snow_ice_layer(ix,iy,:,itile)
         vector%snow_liq_layer(iloc,:)      = tile%snow_liq_layer(ix,iy,:,itile)
         vector%temperature_soil(iloc,:)    = tile%temperature_soil(ix,iy,:,itile)
+        vector%soil_moisture(iloc,:)       = tile%soil_moisture(ix,iy,:,itile)
+        vector%soil_liq_content(iloc,:)    = tile%soil_liq_content(ix,iy,:,itile)
+        vector%intgrtd_soil_temp(iloc)     = tile%intgrtd_soil_temp(ix,iy,itile)
       end if
       
     end do
@@ -482,6 +485,20 @@ contains
       start = (/1                , 1                , 1, 1/), &
       count = (/namelist%tile_size, namelist%tile_size, 4, 1/))
 
+    status = nf90_inq_varid(ncid, "smc", varid)
+    status = nf90_get_var(ncid, varid , tile%soil_moisture(:,:,:,itile)   , &
+      start = (/1                , 1                , 1, 1/), &
+      count = (/namelist%tile_size, namelist%tile_size, 4, 1/))
+
+    status = nf90_inq_varid(ncid, "slc", varid)
+    status = nf90_get_var(ncid, varid , tile%soil_liq_content(:,:,:,itile)   , &
+      start = (/1                , 1                , 1, 1/), &
+      count = (/namelist%tile_size, namelist%tile_size, 4, 1/))
+
+    status = nf90_inq_varid(ncid, "tgxy", varid)
+    status = nf90_get_var(ncid, varid , tile%intgrtd_soil_temp(:,:,itile)   , &
+      start = (/1,1,1/), count = (/namelist%tile_size, namelist%tile_size, 1/))
+
     status = nf90_close(ncid)
 
   end do
@@ -571,6 +588,20 @@ contains
   status = nf90_put_var(ncid, varid , vector%temperature_soil , &
       start = (/1            , 1, 1/)                , &
       count = (/vector_length, 4/))
+
+  status = nf90_inq_varid(ncid, "smc", varid)
+  status = nf90_put_var(ncid, varid , vector%soil_moisture , &
+      start = (/1            , 1, 1/)                , &
+      count = (/vector_length, 4/))
+
+  status = nf90_inq_varid(ncid, "slc", varid)
+  status = nf90_put_var(ncid, varid , vector%soil_liq_content , &
+      start = (/1            , 1, 1/)                , &
+      count = (/vector_length, 4/))
+
+  status = nf90_inq_varid(ncid, "tgxy", varid)
+  status = nf90_put_var(ncid, varid , vector%intgrtd_soil_temp  , &
+      start = (/1,1/), count = (/vector_length, 1/))
 
   status = nf90_close(ncid)
 
@@ -697,7 +728,7 @@ contains
       (/dim_id_xdim,dim_id_ydim,dim_id_time/), varid)
       if (status /= nf90_noerr) call handle_err(status)
       
-  status = nf90_def_var(ncid, "vtype", NF90_DOUBLE,   &
+    status = nf90_def_var(ncid, "vtype", NF90_DOUBLE,   &
       (/dim_id_xdim,dim_id_ydim,dim_id_time/), varid)
       if (status /= nf90_noerr) call handle_err(status)
     status = nf90_enddef(ncid)
