@@ -21,7 +21,7 @@
               # Hera settings
               system "cp config/user_build_config.hera user_build_config"; 
               print "\n load necessary modules:\n"; 
-              print "\n module load intel netcdf/4.7.0 \n\n\n"; 
+              print "\n module load  intel/2020.2 netcdf/4.7.0 \n\n\n"; 
             }
 
   elsif ($response == 2) {
