@@ -312,47 +312,87 @@ contains
   status = nf90_open(filename, NF90_NOWRITE, ncid)
 
   status = nf90_inq_varid(ncid, "snow_water_equiv", varid)
+  if (status /= nf90_noerr) then 
+        print *, 'snow_water_equiv variable missing from vector file' 
+        call handle_err(status) 
+  endif
   status = nf90_get_var(ncid, varid , vector%swe   , &
       start = (/1,1/), count = (/vector_length, 1/))
 
   status = nf90_inq_varid(ncid, "snow_depth", varid)
+  if (status /= nf90_noerr) then 
+        print *, 'snow_depth variable missing from vector file' 
+        call handle_err(status) 
+  endif
   status = nf90_get_var(ncid, varid , vector%snow_depth  , &
       start = (/1,1/), count = (/vector_length, 1/))
 
   status = nf90_inq_varid(ncid, "snow_levels", varid)
+  if (status /= nf90_noerr) then 
+        print *, 'snow_levels variable missing from vector file' 
+        call handle_err(status) 
+  endif
   status = nf90_get_var(ncid, varid , vector%active_snow_layers  , &
       start = (/1,1/), count = (/vector_length, 1/))
 
   status = nf90_inq_varid(ncid, "snow_water_equiv_old", varid)
+  if (status /= nf90_noerr) then 
+        print *, 'snow_water_equiv_old variable missing from vector file' 
+        call handle_err(status) 
+  endif
   status = nf90_get_var(ncid, varid , vector%swe_previous, &
       start = (/1,1/), count = (/vector_length, 1/))
 
   status = nf90_inq_varid(ncid, "temperature_snow", varid)
+  if (status /= nf90_noerr) then 
+        print *, 'temperature_snow variable missing from vector file' 
+        call handle_err(status) 
+  endif
   status = nf90_get_var(ncid, varid , vector%temperature_snow  , &
       start = (/1            , 1, 1/)                , &
       count = (/vector_length, 3, 1/))
 
   status = nf90_inq_varid(ncid, "interface_depth", varid)
+  if (status /= nf90_noerr) then 
+        print *, 'interface_depth variable missing from vector file' 
+        call handle_err(status) 
+  endif
   status = nf90_get_var(ncid, varid , vector%snow_soil_interface , &
       start = (/1            , 1, 1/)                , &
       count = (/vector_length, 7, 1/))
 
   status = nf90_inq_varid(ncid, "snow_level_ice", varid)
+  if (status /= nf90_noerr) then 
+        print *, 'snow_level_ice variable missing from vector file' 
+        call handle_err(status) 
+  endif
   status = nf90_get_var(ncid, varid , vector%snow_ice_layer , &
       start = (/1            , 1, 1/)                , &
       count = (/vector_length, 3, 1/))
 
   status = nf90_inq_varid(ncid, "snow_level_liquid", varid)
+  if (status /= nf90_noerr) then 
+        print *, 'snow_level_liquid variable missing from vector file' 
+        call handle_err(status) 
+  endif
   status = nf90_get_var(ncid, varid , vector%snow_liq_layer , &
       start = (/1            , 1, 1/)                , &
       count = (/vector_length, 3, 1/))
  
   status = nf90_inq_varid(ncid, "temperature_soil", varid)
+  if (status /= nf90_noerr) then 
+        print *, 'temperature_soil variable missing from vector file' 
+        call handle_err(status) 
+  endif
   status = nf90_get_var(ncid, varid , vector%temperature_soil , &
       start = (/1            , 1, 1/)                , &
       count = (/vector_length, 4, 1/))
 
   status = nf90_inq_varid(ncid, "soil_moisture_vol", varid)
+  if (status /= nf90_noerr) then 
+        print *, 'soil_moisture_vol variable missing from vector file' 
+        call handle_err(status) 
+  endif
   status = nf90_get_var(ncid, varid , vector%soil_moisture , &
       start = (/1            , 1, 1/)                , &
       count = (/vector_length, 1, 1/))
@@ -374,6 +414,10 @@ contains
   status = nf90_open(filename, NF90_NOWRITE, ncid)
 
   status = nf90_inq_varid(ncid, "vegetation_category", varid)
+  if (status /= nf90_noerr) then 
+        print *, 'vegetation_category missing from vector file' 
+        call handle_err(status) 
+  endif
   status = nf90_get_var(ncid, varid , vector%vegetation_type, &
       start = (/1,1/), count = (/vector_length, 1/))
       
@@ -421,42 +465,78 @@ contains
 ! Start reading restart file
   
     status = nf90_inq_varid(ncid, "sheleg", varid)
+    if (status /= nf90_noerr) then
+        print *, 'sheleg variable missing from vector file'
+        call handle_err(status)
+    endif
     status = nf90_get_var(ncid, varid , tile%swe(:,:,itile)   , &
       start = (/1,1,1/), count = (/namelist%tile_size, namelist%tile_size, 1/))
 
     status = nf90_inq_varid(ncid, "snwdph", varid)
+    if (status /= nf90_noerr) then
+        print *, 'snwdph variable missing from vector file'
+        call handle_err(status)
+    endif
     status = nf90_get_var(ncid, varid , tile%snow_depth(:,:,itile)   , &
       start = (/1,1,1/), count = (/namelist%tile_size, namelist%tile_size, 1/))
 
     status = nf90_inq_varid(ncid, "snowxy", varid)
+    if (status /= nf90_noerr) then
+        print *, 'snowxy variable missing from vector file'
+        call handle_err(status)
+    endif
     status = nf90_get_var(ncid, varid , tile%active_snow_layers(:,:,itile)   , &
       start = (/1,1,1/), count = (/namelist%tile_size, namelist%tile_size, 1/))
 
     status = nf90_inq_varid(ncid, "sneqvoxy", varid)
+    if (status /= nf90_noerr) then
+        print *, 'sneqvoxy variable missing from vector file'
+        call handle_err(status)
+    endif
     status = nf90_get_var(ncid, varid , tile%swe_previous(:,:,itile)   , &
       start = (/1,1,1/), count = (/namelist%tile_size, namelist%tile_size, 1/))
 
     status = nf90_inq_varid(ncid, "zsnsoxy", varid)
+    if (status /= nf90_noerr) then
+        print *, 'zsnoxy variable missing from vector file'
+        call handle_err(status)
+    endif
     status = nf90_get_var(ncid, varid , tile%snow_soil_interface(:,:,:,itile) , &
       start = (/1                , 1                , 1, 1/), &
       count = (/namelist%tile_size, namelist%tile_size, 7, 1/))
 
     status = nf90_inq_varid(ncid, "tsnoxy", varid)
+    if (status /= nf90_noerr) then
+        print *, 'tsnoxy variable missing from vector file'
+        call handle_err(status)
+    endif
     status = nf90_get_var(ncid, varid , tile%temperature_snow(:,:,:,itile)  , &
       start = (/1                , 1                , 1, 1/), &
       count = (/namelist%tile_size, namelist%tile_size, 3, 1/))
 
     status = nf90_inq_varid(ncid, "snicexy", varid)
+    if (status /= nf90_noerr) then
+        print *, 'snicexy variable missing from vector file'
+        call handle_err(status)
+    endif
     status = nf90_get_var(ncid, varid , tile%snow_ice_layer(:,:,:,itile) , &
       start = (/1                , 1                , 1, 1/), &
       count = (/namelist%tile_size, namelist%tile_size, 3, 1/))
 
     status = nf90_inq_varid(ncid, "snliqxy", varid)
+    if (status /= nf90_noerr) then
+        print *, 'snliqxy variable missing from vector file'
+        call handle_err(status)
+    endif
     status = nf90_get_var(ncid, varid , tile%snow_liq_layer(:,:,:,itile) , &
       start = (/1                , 1                , 1, 1/), &
       count = (/namelist%tile_size, namelist%tile_size, 3, 1/))
 
     status = nf90_inq_varid(ncid, "stc", varid)
+    if (status /= nf90_noerr) then
+        print *, 'stc variable missing from vector file'
+        call handle_err(status)
+    endif
     status = nf90_get_var(ncid, varid , tile%temperature_soil(:,:,:,itile)   , &
       start = (/1                , 1                , 1, 1/), &
       count = (/namelist%tile_size, namelist%tile_size, 4, 1/))
