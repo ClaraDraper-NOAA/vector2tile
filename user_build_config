@@ -3,8 +3,8 @@
 #  Placeholder options for hera
 #===============================================================================
 
- COMPILERF90    =       ifort
+ COMPILERF90    =       /apps/intel/parallel_studio_xe_2020.2.108/compilers_and_libraries_2020/linux/bin/intel64/ifort
  FREESOURCE     =       
- F90FLAGS       =       
- NETCDFMOD      =       -I/apps/netcdf/4.7.0/intel/18.0.5.274/include
- NETCDFLIB      =       -L/apps/netcdf/4.7.0/intel/18.0.5.274/lib -lnetcdf -lnetcdff
+ F90FLAGS       =       -r8
+ NETCDFMOD      =       -I/apps/netcdf/4.7.4/intel/18.0.5/include
+ NETCDFLIB      =       -L/apps/netcdf/4.7.4/intel/18.0.5/lib -lnetcdf -lnetcdff

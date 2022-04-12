@@ -1,0 +1,29 @@
+&run_setup
+
+! Direction of conversion: either "vector2tile" or "tile2vector"
+
+  direction = "layout2vector"
+
+! layout
+
+  layout = "1x4"
+
+! FV3 resolution and path to oro files
+
+  tile_size = 96
+
+  tile_path = "/scratch2/BMC/gsienkf/Clara.Draper/data_RnR/orog_files_Mike/"
+
+! input files
+
+  input_file = "/scratch1/NCEPDEV/stmp4/Zhichang.Guo/Work/Test/vp/phil/stochastic_physics/unit_tests/stochy_out/workg_T162_984x488.tileXX.nc"
+
+! output files
+
+  output_file = "./output.nc"
+
+! land perturbation variable list
+
+  lndp_var_list='vgf','smc'
+
+/
